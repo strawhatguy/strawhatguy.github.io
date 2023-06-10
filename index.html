@@ -1,17 +1,47 @@
 <!DOCTYPE html>
 <html>
+  <style>
+   div.settings {
+     display:grid;
+     grid-template-columns: max-content max-content;
+     grid-gap:5px;
+   }
+   div.settings label       { text-align:right; }
+   div.settings label:after { content: ":"; }
+  </style>
 <body>
 
 <h2>Ford Window Sticker Lookup</h2>
 
-<form action="https://www.windowsticker.forddirect.com/windowsticker.pdf">
-  <label for="vin">VIN:</label><br>
-  <input type="text" id="vin" name="vin" value=""><br><br>
-  <input type="submit" value="Submit">
+<form method="GET" action="https://www.windowsticker.forddirect.com/windowsticker.pdf">
+  <div class="settings" style="float:left;">
+    <label for="vin">VIN</label>
+    <input type="text" id="vin" name="vin" value="">
+  </div>
+  <div class="settings">
+    <input type="submit" value="Submit">
+  </div>
 </form>
 
 <h2>Ford Bronco Badlands/Wildtrak search</h2>
-<a href="https://shop.ford.com/inventory/bronco/results?zipcode=98155&Radius=20&modeltrim=Bronco_F25-BADLANDS%3BBronco_F25-WILDTRAK&rapidSpecs=333A%3B334A%3B353A%3B354A&Order=Distance&intcmp=show-si">High+Lux</a>
+<form method="GET" action="https://shop.ford.com/inventory/bronco/results">
+  <input type="hidden" name="modeltrim" value="Bronco_F25-BADLANDS%3BBronco_F25-WILDTRAK">
+  <input type="hidden" name="rapidSpecs" value="333A%3B334A%3B353A%3B354A">
+  <input type="hidden" name="Order" value="HighPrice">
+  <input type="hidden" name="intcmp" value="show-si">
+
+  <div class="settings" style="float:left;">
+    <label for="zipcode">Zipcode</label>
+    <input type="text" id="zipcode" name="zipcode" value="98155">
+  </div>
+  <div class="settings" style="float:left;">
+    <label for="Radius">Radius (mi)</label>
+    <input type="text" id="Radius" name="Radius" value="500">
+  </div>
+  <div class="settings">
+    <input type="submit" value="Submit">
+  </div>
+</form>
 
 </body>
 </html>
