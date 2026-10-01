@@ -97,5 +97,76 @@
   };
 </script>
 
+<h2>Ford F-150 PowerBoost hybrid inventory search</h2>
+<!-- Same approach as the Bronco form: multi-valued filters are joined with ";". -->
+<form id="f150" method="GET" target="_blank" action="https://www.ford.com/inventory/f150/results">
+  <fieldset style="float:left;">
+    <legend>Model year</legend>
+    <label><input type="checkbox" name="year" value="2024"> 2024</label><br>
+    <label><input type="checkbox" name="year" value="2025" checked> 2025</label><br>
+    <label><input type="checkbox" name="year" value="2026" checked> 2026</label>
+  </fieldset>
+  <fieldset style="float:left;">
+    <legend>Trim</legend>
+    <label><input type="checkbox" name="trim" value="SE#KF"> STX (2026)</label><br>
+    <label><input type="checkbox" name="trim" value="SE#GJ"> XLT (SuperCrew)</label><br>
+    <label><input type="checkbox" name="trim" value="SE#GR"> Lariat</label><br>
+    <label><input type="checkbox" name="trim" value="SE#GT"> King Ranch</label><br>
+    <label><input type="checkbox" name="trim" value="SE#GU"> Platinum</label>
+  </fieldset>
+  <fieldset style="float:left;">
+    <legend>Cab</legend>
+    <label><input type="checkbox" name="cab" value="CA#BC"> SuperCrew</label><br>
+    <label><input type="checkbox" name="cab" value="CA#BD"> SuperCab</label>
+  </fieldset>
+  <fieldset style="float:left;">
+    <legend>Bed</legend>
+    <label><input type="checkbox" name="cargoBox" value="A9CBK"> 5-1/2'</label><br>
+    <label><input type="checkbox" name="cargoBox" value="A9CBL"> 6-1/2'</label>
+  </fieldset>
+  <fieldset style="float:left;">
+    <legend>Engine</legend>
+    <label><input type="checkbox" name="engine" value="EN-CN" checked> 3.5L PowerBoost Full Hybrid V6</label>
+  </fieldset>
+  <div style="clear:both;"></div>
+  <p>Unchecked group = any. PowerBoost requires 4x4; trims listed are the ones Ford offers it on.</p>
+
+  <div class="settings" style="float:left;">
+    <label for="f150-zip">Zipcode</label>
+    <input type="text" id="f150-zip" name="postalCode" value="98155">
+  </div>
+  <div class="settings" style="float:left;">
+    <label for="f150-radius">Radius (mi)</label>
+    <select id="f150-radius" name="radius">
+      <option>20</option><option>50</option><option>100</option><option selected>500</option>
+    </select>
+  </div>
+  <div class="settings" style="float:left;">
+    <label for="f150-sort">Sort</label>
+    <select id="f150-sort" name="sort">
+      <option value="price-desc" selected>Price high-low</option>
+      <option value="price-asc">Price low-high</option>
+      <option value="distance-asc">Distance</option>
+    </select>
+  </div>
+  <div class="settings">
+    <input type="submit" value="Submit">
+  </div>
+</form>
+<script>
+  (function () {
+    var g = document.getElementById('f150');
+    g.onsubmit = function (e) {
+      e.preventDefault();
+      var p = new URLSearchParams(), d = new FormData(g);
+      ['postalCode', 'radius', 'year', 'trim', 'cab', 'cargoBox', 'engine', 'sort'].forEach(function (k) {
+        var v = d.getAll(k).map(function (x) { return x.trim(); }).filter(Boolean);
+        if (v.length) p.set(k, v.join(';'));
+      });
+      window.open(g.action + '?' + p.toString(), '_blank');
+    };
+  })();
+</script>
+
 </body>
 </html>
