@@ -23,25 +23,79 @@
   </div>
 </form>
 
-<h2>Ford Bronco Badlands/Wildtrak search</h2>
-<form method="GET" target="_blank" action="https://shop.ford.com/inventory/bronco/results">
-  <input type="hidden" name="modeltrim" value="Bronco_F25-BADLANDS%3BBronco_F25-WILDTRAK">
-  <input type="hidden" name="rapidSpecs" value="333A%3B334A%3B353A%3B354A">
-  <input type="hidden" name="Order" value="HighPrice">
-  <input type="hidden" name="intcmp" value="show-si">
+<h2>Ford Bronco inventory search</h2>
+<!-- Builds a www.ford.com/inventory/bronco/results URL. Ford expects multi-valued
+     filters joined with ";" (e.g. trim=SE%23HJ%3BSE%23JG), so a tiny script joins
+     the checked boxes instead of letting the browser repeat the parameter. -->
+<form id="bronco" method="GET" target="_blank" action="https://www.ford.com/inventory/bronco/results">
+  <fieldset style="float:left;">
+    <legend>Model year</legend>
+    <label><input type="checkbox" name="year" value="2024"> 2024</label><br>
+    <label><input type="checkbox" name="year" value="2025" checked> 2025</label><br>
+    <label><input type="checkbox" name="year" value="2026" checked> 2026</label>
+  </fieldset>
+  <fieldset style="float:left;">
+    <legend>Trim</legend>
+    <label><input type="checkbox" name="trim" value="SE#HC"> Base</label><br>
+    <label><input type="checkbox" name="trim" value="SE#HD"> Big Bend</label><br>
+    <label><input type="checkbox" name="trim" value="SE#HH"> Black Diamond (thru 2024)</label><br>
+    <label><input type="checkbox" name="trim" value="SE#HE"> Outer Banks</label><br>
+    <label><input type="checkbox" name="trim" value="SE#HJ" checked> Badlands</label><br>
+    <label><input type="checkbox" name="trim" value="SE#HF"> Wildtrak (trim thru 2024)</label><br>
+    <label><input type="checkbox" name="trim" value="SE#JF"> Everglades (thru 2024)</label><br>
+    <label><input type="checkbox" name="trim" value="SE#JE"> Heritage Edition</label><br>
+    <label><input type="checkbox" name="trim" value="SE#RE"> Heritage Limited Edition</label><br>
+    <label><input type="checkbox" name="trim" value="SE#JG" checked> Stroppe Edition (2025: 2-door, 2026: 4-door)</label><br>
+    <label><input type="checkbox" name="trim" value="SE#JM"> Raptor</label>
+  </fieldset>
+  <fieldset style="float:left;">
+    <legend>Body</legend>
+    <label><input type="checkbox" name="bodyStyle" value="CA#WG"> 2 Door</label><br>
+    <label><input type="checkbox" name="bodyStyle" value="CA#WL"> 4 Door</label>
+  </fieldset>
+  <div style="clear:both;"></div>
+  <p>Unchecked group = any. 2026 Wildtrak is a package on 4-door Badlands, so pick Badlands for it.
+    <button type="button" id="stroppe2dr">Preset: 2025 2-door Stroppe</button></p>
 
   <div class="settings" style="float:left;">
     <label for="zipcode">Zipcode</label>
-    <input type="text" id="zipcode" name="zipcode" value="98155">
+    <input type="text" id="zipcode" name="postalCode" value="98155">
   </div>
   <div class="settings" style="float:left;">
     <label for="Radius">Radius (mi)</label>
-    <input type="text" id="Radius" name="Radius" value="500">
+    <select id="Radius" name="radius">
+      <option>20</option><option>50</option><option>100</option><option selected>500</option>
+    </select>
+  </div>
+  <div class="settings" style="float:left;">
+    <label for="sort">Sort</label>
+    <select id="sort" name="sort">
+      <option value="price-desc" selected>Price high-low</option>
+      <option value="price-asc">Price low-high</option>
+      <option value="distance-asc">Distance</option>
+    </select>
   </div>
   <div class="settings">
     <input type="submit" value="Submit">
   </div>
 </form>
+<script>
+  var f = document.getElementById('bronco');
+  document.getElementById('stroppe2dr').onclick = function () {
+    f.querySelectorAll('input[type=checkbox]').forEach(function (c) {
+      c.checked = ['2025', 'SE#JG', 'CA#WG'].indexOf(c.value) >= 0;
+    });
+  };
+  f.onsubmit = function (e) {
+    e.preventDefault();
+    var p = new URLSearchParams(), d = new FormData(f);
+    ['postalCode', 'radius', 'year', 'trim', 'bodyStyle', 'sort'].forEach(function (k) {
+      var v = d.getAll(k).map(function (x) { return x.trim(); }).filter(Boolean);
+      if (v.length) p.set(k, v.join(';'));
+    });
+    window.open(f.action + '?' + p.toString(), '_blank');
+  };
+</script>
 
 </body>
 </html>
