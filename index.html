@@ -11,7 +11,21 @@
   </style>
 <body>
 
-<h2>Ford Window Sticker Lookup</h2>
+<h2>Stocks</h2>
+<p><a href="stocks.html">Stock Research</a> (ticker news, quotes, SEC filings)</p>
+<form method="GET" action="stocks.html">
+  <div class="settings" style="float:left;">
+    <label for="stock-t">Ticker</label>
+    <input type="text" id="stock-t" name="t" value="">
+  </div>
+  <div class="settings">
+    <input type="submit" value="Go">
+  </div>
+</form>
+
+<h2>Ford</h2>
+
+<h3>Ford Window Sticker Lookup</h3>
 
 <form method="GET" target="_blank" action="https://www.windowsticker.forddirect.com/windowsticker.pdf">
   <div class="settings" style="float:left;">
@@ -23,7 +37,7 @@
   </div>
 </form>
 
-<h2>Ford Bronco inventory search</h2>
+<h3>Ford Bronco inventory search</h3>
 <!-- Builds a www.ford.com/inventory/bronco/results URL. Ford expects multi-valued
      filters joined with ";" (e.g. trim=SE%23HJ%3BSE%23JG), so a tiny script joins
      the checked boxes instead of letting the browser repeat the parameter. -->
@@ -97,7 +111,7 @@
   };
 </script>
 
-<h2>Ford F-150 PowerBoost hybrid inventory search</h2>
+<h3>Ford F-150 PowerBoost hybrid inventory search</h3>
 <!-- Same approach as the Bronco form: multi-valued filters are joined with ";". -->
 <form id="f150" method="GET" target="_blank" action="https://www.ford.com/inventory/f150/results">
   <fieldset style="float:left;">

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <title>Stock Research</title>
+  <style>
+   div.settings {
+     display:grid;
+     grid-template-columns: max-content max-content;
+     grid-gap:5px;
+   }
+   div.settings label       { text-align:right; }
+   div.settings label:after { content: ":"; }
+  </style>
+  </head>
+<body>
+
+<p><a href="index.html">&larr; Home</a></p>
+<h2>Stock Research</h2>
+
+<!-- Plain GET to this page, so results are bookmarkable as stocks.html?t=TICKER -->
+<form method="GET" action="stocks.html">
+  <div class="settings" style="float:left;">
+    <label for="t">Ticker</label>
+    <input type="text" id="t" name="t" value="" autocapitalize="characters" autofocus>
+  </div>
+  <div class="settings">
+    <input type="submit" value="Go">
+  </div>
+</form>
+
+<div id="links"></div>
+
+<script>
+  (function () {
+    var t = (new URLSearchParams(location.search).get('t') || '').trim().toUpperCase();
+    if (!/^[A-Z0-9.\-^=]{1,15}$/.test(t)) return;
+    document.getElementById('t').value = t;
+    var e = encodeURIComponent, dash = e(t.replace(/\./g, '-')); // Yahoo/Finviz use BRK-B, not BRK.B
+    var links = [
+      ['Yahoo Finance news', 'https://finance.yahoo.com/quote/' + dash + '/news/'],
+      ['Google News', 'https://news.google.com/search?q=' + e(t + ' stock') + '&hl=en-US&gl=US&ceid=US:en'],
+      ['Google Finance', 'https://www.google.com/search?tbm=fin&q=' + e(t + ' stock')],
+      ['Finviz', 'https://finviz.com/quote.ashx?t=' + dash],
+      ['SEC EDGAR filings', 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + e(t) + '&owner=include&count=40']
+    ];
+    var h = '<h3>' + t + '</h3><ul>';
+    links.forEach(function (l) {
+      h += '<li><a target="_blank" rel="noopener" href="' + l[1].replace(/&/g, '&amp;') + '">' + l[0] + '</a></li>';
+    });
+    document.getElementById('links').innerHTML = h + '</ul>';
+  })();
+</script>
+
+</body>
+</html>
