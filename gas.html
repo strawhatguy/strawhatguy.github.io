@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Premium gas near me</title>
+  <style>
+   div.settings {
+     display:grid;
+     grid-template-columns: max-content max-content;
+     grid-gap:5px;
+   }
+   div.settings label       { text-align:right; }
+   div.settings label:after { content: ":"; }
+   li { margin-bottom: 6px; }
+  </style>
+  </head>
+<body>
+
+<p><a href="index.html">&larr; Home</a></p>
+<h2>Premium gas near me</h2>
+
+<!-- No free, key-less source of live premium prices is readable from a browser
+     (GasBuddy's API has no CORS). So: nearby stations from OpenStreetMap
+     (Overpass API) sorted by distance, plus GasBuddy pre-filtered to premium. -->
+<form id="zipform" method="GET" action="gas.html">
+  <div class="settings" style="float:left;">
+    <label for="zip">ZIP</label>
+    <input type="text" id="zip" name="zip" value="98155" size="6">
+  </div>
+  <div class="settings">
+    <input type="submit" value="Search ZIP">
+  </div>
+</form>
+
+<p id="status">Getting your location&hellip;</p>
+<div id="links"></div>
+<ol id="stations"></ol>
+<p><small>Station data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors. Prices: tap through to GasBuddy.</small></p>
+
+<script>
+  (function () {
+    var statusEl = document.getElementById('status');
+    var RADIUS_M = 8000, MAX = 25;
+    var OVERPASS = ['https://overpass-api.de/api/interpreter',
+                    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c];
+      });
+    }
+    function link(text, url) {
+      return '<a target="_blank" rel="noopener" href="' + esc(url) + '">' + esc(text) + '</a>';
+    }
+    function miles(lat1, lon1, lat2, lon2) {
+      var r = Math.PI / 180, a = Math.sin((lat2 - lat1) * r / 2), b = Math.sin((lon2 - lon1) * r / 2);
+      var h = a * a + Math.cos(lat1 * r) * Math.cos(lat2 * r) * b * b;
+      return 3958.8 * 2 * Math.asin(Math.sqrt(h));
+    }
+
+    function showLinks(lat, lon, label) {
+      var ll = lat.toFixed(4) + ',' + lon.toFixed(4);
+      document.getElementById('links').innerHTML = '<p>Near ' + esc(label) + ': ' +
+        link('GasBuddy premium prices', 'https://www.gasbuddy.com/home?search=' + encodeURIComponent(ll) + '&fuel=3') + ' | ' +
+        link('Google Maps gas stations', 'https://www.google.com/maps/search/gas+station/@' + ll + ',14z') + '</p>';
+    }
+
+    function fetchOverpass(q, i) {
+      i = i || 0;
+      return fetch(OVERPASS[i], {method: 'POST', body: 'data=' + encodeURIComponent(q)})
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(function (e) { if (i + 1 < OVERPASS.length) return fetchOverpass(q, i + 1); throw e; });
+    }
+
+    function load(lat, lon, label) {
+      showLinks(lat, lon, label);
+      statusEl.textContent = 'Finding gas stations near ' + label + '\u2026';
+      var q = '[out:json][timeout:25];nwr["amenity"="fuel"](around:' + RADIUS_M + ',' + lat + ',' + lon + ');out center tags;';
+      fetchOverpass(q).then(function (d) {
+        var list = d.elements.map(function (e) {
+          var t = e.tags || {}, la = e.lat || (e.center && e.center.lat), lo = e.lon || (e.center && e.center.lon);
+          return {t: t, lat: la, lon: lo, mi: miles(lat, lon, la, lo)};
+        }).filter(function (s) { return s.lat && s.t.access !== 'private'; })
+          .sort(function (a, b) { return a.mi - b.mi; }).slice(0, MAX);
+        if (!list.length) { statusEl.textContent = 'No gas stations found within 5 miles of ' + label + '.'; return; }
+        statusEl.textContent = list.length + ' nearest gas stations to ' + label + ' (no live prices; use GasBuddy link above for premium prices):';
+        document.getElementById('stations').innerHTML = list.map(function (s) {
+          var t = s.t, name = t.name || t.brand || 'Gas station';
+          var brand = t.brand && t.brand !== name ? ' (' + t.brand + ')' : '';
+          var addr = [[t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), t['addr:city']].filter(Boolean).join(', ');
+          return '<li><b>' + esc(name) + '</b>' + esc(brand) + ' &mdash; ' + s.mi.toFixed(1) + ' mi' +
+            (addr ? '<br>' + esc(addr) : '') + '<br>' +
+            link('Directions', 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lon) +
+            (t['fuel:octane_98'] === 'yes' || t['fuel:octane_93'] === 'yes' || t['fuel:octane_92'] === 'yes' || t['fuel:octane_91'] === 'yes' ? ' &middot; premium listed in OSM' : '') +
+            '</li>';
+        }).join('');
+      }).catch(function (e) {
+        statusEl.textContent = 'Could not load station list (' + e.message + '). The links above still work.';
+      });
+    }
+
+    function loadZip(zip) {
+      document.getElementById('zip').value = zip;
+      statusEl.textContent = 'Looking up ZIP ' + zip + '\u2026';
+      fetch('https://nominatim.openstreetmap.org/search?country=us&format=json&limit=1&postalcode=' + encodeURIComponent(zip))
+        .then(function (r) { return r.json(); })
+        .then(function (a) {
+          if (!a.length) throw new Error('ZIP not found');
+          load(parseFloat(a[0].lat), parseFloat(a[0].lon), 'ZIP ' + zip);
+        }).catch(function (e) { statusEl.textContent = 'ZIP lookup failed: ' + e.message; });
+    }
+
+    var zip = (new URLSearchParams(location.search).get('zip') || '').trim();
+    if (/^\d{5}$/.test(zip)) {
+      loadZip(zip);
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (p) {
+        load(p.coords.latitude, p.coords.longitude, 'your location');
+      }, function (err) {
+        statusEl.textContent = 'Location unavailable (' + err.message + '); using ZIP 98155.';
+        loadZip('98155');
+      }, {enableHighAccuracy: false, timeout: 10000, maximumAge: 300000});
+    } else {
+      loadZip('98155');
+    }
+  })();
+</script>
+
+</body>
+</html>
